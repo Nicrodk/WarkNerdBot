@@ -1,12 +1,12 @@
-const fs = require('fs');
-const discord = require('discord.io');
-const logger = require('winston');
 const {prefix, token} = require('./config.json');
+const discord = require('discord.js');
+const logger = require('winston');
+const fs = require('fs');
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
-    colorize: true
+    format: logger.format.simple(),
 });
 
 logger.level = 'debug';
@@ -14,6 +14,7 @@ logger.level = 'debug';
 // Initialize discord client
 const client = new discord.Client();
 
+client.autorun = true;
 client.commands = new discord.Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -22,11 +23,13 @@ for (const file of commandFiles) {
     client.commands.set(command.name, command);
 }
 
-client.on('ready', function (evt) {
+client.login(token);
+
+client.on('ready', () => {
 
     logger.info('Connected');
     logger.info('Logged in as: ');
-    logger.info(client.username + ' - (' + client.id + ')');
+    logger.info(client.user + ' - (' + client.id + ')');
 });
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
@@ -35,26 +38,31 @@ client.on('ready', function (evt) {
 
 const parseCommand = (message, author) => {
 
-    const lowerCase = message.toLowerCase();
+    const lowerCase = message.content.toLowerCase();
     
     let args = lowerCase.substring(4).split(' ');
     const cmd = args[0];
-       
     args = args.splice(1);
-    switch(cmd) {
-        // !ping
-        case 'ping':
-            client.commands.get('ping').execute(message, args);
-        break;
+
+    if (!client.commands.has(cmd))
+        return;
+
+    messageText = message.content.split(prefix + ' ' + cmd);
+
+    try {
+        client.commands.get(cmd).execute(message, messageText[1], args);
+    } catch (error) {
+        console.error(error);
+        message.reply('there was an error trying to execute that command');
     }
 }
 
-client.on('message', function (user, userID, channelID, message, evt) {
+client.on('message', (message) => {
+
+    let author = message.author;
 
     if (!message.content.startsWith(prefix) || message.author.bot)
         return;
 
     parseCommand(message, author);
 });
-
-client.login(token);
