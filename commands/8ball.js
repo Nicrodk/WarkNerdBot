@@ -24,7 +24,7 @@ const msgArr = [
 
 module.exports = {
 	name: '8ball',
-	description: 'Vague answers for the questions',
+	description: 'Answers for the questions',
 	help: ' 8ball <inqury>, What does the 8ball have to say today',
 	execute(message, text) {
 		const rand = seed(text + new Date().getHours());

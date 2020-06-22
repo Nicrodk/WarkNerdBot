@@ -8,7 +8,8 @@ const client = new discord.Client();
 
 client.autorun = true;
 client.commands = new discord.Collection();
-const commandFiles = fs.readdirSync('./commands').filter( file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./commands').filter(
+                file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
@@ -22,7 +23,6 @@ client.commands.each(element => {
 });
 helpString += "```";
 
-
 client.login(token);
 
 client.on('ready', () => {
@@ -32,11 +32,29 @@ client.on('ready', () => {
         client.user.username + ' - (' + client.user.id + ')');
 });
 
-//In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
-/*const reminderUpdate = setInterval(//TODO: input update function name
-, 60 * 1000);*/
+let reminderArr = [];
 
-const parseCommand = (message, author) => {
+const checkReminders = () => {
+    const currTime = new Date().getTime();
+    let delArr = [];
+    if (reminderArr.length > 0) {
+        reminderArr.forEach((element, index) => {
+            if (currTime > element.time) {
+                const channel = client.channels.cache.get(element.channelID);
+                channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
+                delArr.unshift(index);
+            }
+        });
+        delArr.forEach(element => {
+            reminderArr.splice(element, 1);
+        });
+    }
+}
+
+//In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
+const reminderUpdate = setInterval(checkReminders, 30 * 1000);
+
+const ParseCommand = (message, author) => {
 
     const lowerCase = message.content.toLowerCase();
     
@@ -53,6 +71,16 @@ const parseCommand = (message, author) => {
 
     messageText = message.content.split(prefix + ' ' + cmd);
 
+    if (cmd == "remindme") {
+        try {
+            reminderArr.push(client.commands.get(cmd).execute(message, messageText[1]));
+        } catch (error) {
+            console.error(error);
+        message.reply(`there was an error trying to create the reminder`);
+        }
+        return;
+    }
+
     try {
         client.commands.get(cmd).execute(message, messageText[1]);
     } catch (error) {
@@ -68,5 +96,5 @@ client.on('message', (message) => {
     if (!message.content.startsWith(prefix) || message.author.bot)
         return;
 
-    parseCommand(message, author);
+    ParseCommand(message, author);
 });

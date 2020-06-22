@@ -17,7 +17,6 @@ module.exports = {
 		const diceSize	 = parts[2];
 
 		let diceArr = [];
-
 		let total = 0;
 
 		for (let i = 0; i < diceAmount; i++) {
