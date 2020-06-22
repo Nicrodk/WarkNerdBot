@@ -3,33 +3,33 @@ const discord = require('discord.js');
 const logger = require('winston');
 const fs = require('fs');
 
-// Configure logger settings
-logger.remove(logger.transports.Console);
-logger.add(new logger.transports.Console, {
-    format: logger.format.simple(),
-});
-
-logger.level = 'debug';
-
 // Initialize discord client
 const client = new discord.Client();
 
 client.autorun = true;
 client.commands = new discord.Collection();
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./commands').filter( file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
     client.commands.set(command.name, command);
 }
 
+let helpString = "```";
+
+client.commands.each(element => {
+    helpString += "\n" + prefix + element.help;
+});
+helpString += "```";
+
+
 client.login(token);
 
 client.on('ready', () => {
 
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(client.user + ' - (' + client.id + ')');
+    console.log('Connected');
+    console.log('Logged in as: ' +
+        client.user.username + ' - (' + client.user.id + ')');
 });
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
@@ -42,7 +42,11 @@ const parseCommand = (message, author) => {
     
     let args = lowerCase.substring(4).split(' ');
     const cmd = args[0];
-    args = args.splice(1);
+
+    if (cmd == "help") {
+        message.reply(helpString);
+        return;
+    }
 
     if (!client.commands.has(cmd))
         return;
@@ -50,16 +54,16 @@ const parseCommand = (message, author) => {
     messageText = message.content.split(prefix + ' ' + cmd);
 
     try {
-        client.commands.get(cmd).execute(message, messageText[1], args);
+        client.commands.get(cmd).execute(message, messageText[1]);
     } catch (error) {
         console.error(error);
-        message.reply('there was an error trying to execute that command');
+        message.reply(`there was an error trying to execute that command`);
     }
 }
 
 client.on('message', (message) => {
 
-    let author = message.author;
+    const author = message.author;
 
     if (!message.content.startsWith(prefix) || message.author.bot)
         return;
