@@ -9,12 +9,11 @@ module.exports = {
 
 		if (parts == null) {
 			parts = text.match(/(\d*)\s*[dD]\s*(\d+)/);
-			parts.length = 3;
 			withMod = false;
 		}
 
-		const diceAmount = parts[1];
-		const diceSize	 = parts[2];
+		let diceAmount 	= parts[1];
+		let diceSize	= parts[2];
 
 		if (diceAmount == null || diceAmount <= 0) 
 			diceAmount = 1;
@@ -48,15 +47,16 @@ module.exports = {
 			diceArr[index] = "[" + element + "]";
 		});
 
-		if (parts[3] == "+")
-			total += parseInt(parts[4]);
-		else if (parts[3] == "-")
-			total -= parseInt(parts[4]);
+		if (withMod) {
+			if (parts[3] == "+")
+				total += parseInt(parts[4]);
+			else if (parts[3] == "-")
+				total -= parseInt(parts[4]);
 
-		if (withMod)
 			message.channel.send(`${diceArr.join(" ")} ${parts[3]} ${parts[4]} = ${total}`);
-		else
+		} else {
 			message.channel.send(`${diceArr.join(" ")} = ${total}`);
+		}
 	}
 };
 
