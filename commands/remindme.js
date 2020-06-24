@@ -1,9 +1,9 @@
 module.exports = {
 	name: 'remindme',
 	description: 'Create a reminder',
-	help: ' remindme Xm(inute(s)) Xh(our(s)) Xd(ay(s)) text, creates a countdown for pinging the person with text maximum allowed days is 60, hours is 144 and minutes is 1800 (the limits are individual so you can do 1800minutes 144hours 60days)',
+	help: ' remindme Xminutes Xhours Xdays text, creates a countdown for pinging the person with text maximum allowed days is 60, hours is 144 and minutes is 1800 (the limits are individual so you can do 1800minutes 144hours 60days) The word specifier is not needed for 2 numbers will be minutes hours and 3 numbers will be minutes hours days, solo number needs at least [m|M][h|H] or [d|D] identifiers',
 	execute(message, text) {
-		let times = text.match(/(\d+)\w+\s*(\d+)\w+\s*(\d+)\w+/);
+		let times = text.match(/(\d+)\w*\s*(\d+)\w*\s*(\d+)\w*/);
 		let textArr = text.split(' ');
 		textArr.splice(0, 4);
 		let mhd = true;
@@ -12,28 +12,28 @@ module.exports = {
 		if (times == null) {
 			mhd = false;
 			mh = true;
-			times = text.match(/(\d+)\w+\s*(\d+)\w+/);
+			times = text.match(/(\d+)\w*\s*(\d+)\w*/);
 			textArr = text.split(' ');
 			textArr.splice(0, 3);
 
 			if (times == null) {
 				mh = false;
 				m = true;
-				times = text.match(/(\d+)m/);
+				times = text.match(/(\d+)[mM]/);
 				textArr = text.split(' ');
 				textArr.splice(0, 2);
 
 				if (times == null) {
 					m = false;
 					h = true;
-					times = text.match(/(\d+)h/);
+					times = text.match(/(\d+)[hH]/);
 					textArr = text.split(' ');
 					textArr.splice(0, 2);
 
 					if (times == null) {
 						h = false;
 						d = true;
-						times = text.match(/(\d+)d/);
+						times = text.match(/(\d+)[dD]/);
 						textArr = text.split(' ');
 						textArr.splice(0, 2);
 					}
