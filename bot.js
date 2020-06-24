@@ -76,7 +76,11 @@ const ParseCommand = (message, author) => {
             reminderArr.push(client.commands.get(cmd).execute(message, messageText[1]));
         } catch (error) {
             console.error(error);
-        message.reply(`there was an error trying to create the reminder`);
+            if (error.includes("Part of given time was above limit")) {
+                message.reply("One of the given parameters were above limit");
+            } else {
+                message.reply(`there was an error trying to create the reminder`);
+            }
         }
         return;
     }
