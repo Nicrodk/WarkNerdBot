@@ -3,7 +3,6 @@ module.exports = {
 	description: 'Create a reminder',
 	help: ' remindme Xidentifier Xidentifier Xidentifier text, creates a countdown for pinging the person with text maximum allowed days is 60, hours is 144 and minutes is 1800 (the limits are individual so you can do 1800minutes 144hours 60days) The the identifiers can be just [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, can do only 1 or 2 numbers+identifier if only want to specify reminder in m/h/d or mh/md/hd',
 	execute(message, text) {
-		text = text.toLowerCase();
 		let times = text.match(/(\d+)(\w*)\s*(\d+)?(\w*)\s*(\d+)?(\w*)/);
 		let textArr = text.split(' ');
 		let date = new Date();
@@ -32,19 +31,19 @@ module.exports = {
 		};
 
 		if (times[2] == null)
-			date = AddM(date, times[1]);
+			date = local["AddM"](date, times[1]);
 		else
-			date = local["Add"+times[2].toUpperCase()](date, times[1]);
+			date = local["Add"+times[2].toUpperCase().charAt(0)](date, times[1]);
 
 		if (times[4] == null && times[3] != null)
-			date = AddH(date, times[3]);
+			date = local["AddH"](date, times[3]);
 		else if (times[3] != null)
-			date = local["Add"+times[4].toUpperCase()](date, times[3]);
+			date = local["Add"+times[4].toUpperCase().charAt(0)](date, times[3]);
 
 		if (times[6] == null && times[5] != null)
-			date = AddD(date, times[5]);
+			date = local["AddD"](date, times[5]);
 		else if (times[5] != null)
-			date = local["Add"+times[6].toUpperCase()](date, times[5]);
+			date = local["Add"+times[6].toUpperCase().charAt(0)](date, times[5]);
 
 		if (times[3] == null && times[5] == null) {
 			textArr.splice(0, 2);
