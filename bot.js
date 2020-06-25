@@ -52,7 +52,7 @@ const checkReminders = () => {
 }
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
-const reminderUpdate = setInterval(checkReminders, 30 * 1000);
+const reminderUpdate = setInterval(checkReminders, 15 * 1000);
 
 const ParseCommand = (message, author) => {
 
@@ -76,7 +76,7 @@ const ParseCommand = (message, author) => {
             reminderArr.push(client.commands.get(cmd).execute(message, messageText[1]));
         } catch (error) {
             console.error(error);
-            if (error.includes("Part of given time was above limit")) {
+            if (error === "Part of given time was above limit") {
                 message.reply("One of the given parameters were above limit");
             } else {
                 message.reply(`there was an error trying to create the reminder`);

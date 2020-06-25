@@ -1,44 +1,57 @@
 module.exports = {
 	name: 'remindme',
 	description: 'Create a reminder',
-	help: ' remindme Xminutes Xhours Xdays text, creates a countdown for pinging the person with text maximum allowed days is 60, hours is 144 and minutes is 1800 (the limits are individual so you can do 1800minutes 144hours 60days) The word specifier is not needed for 2 numbers will be minutes hours and 3 numbers will be minutes hours days, solo number needs at least [m|M][h|H] or [d|D] identifiers',
+	help: ' remindme Xidentifier Xidentifier Xidentifier text, creates a countdown for pinging the person with text maximum allowed days is 60, hours is 144 and minutes is 1800 (the limits are individual so you can do 1800minutes 144hours 60days) The the identifiers can be just [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, can do only 1 or 2 numbers+identifier if only want to specify reminder in m/h/d or mh/md/hd',
 	execute(message, text) {
-		let times = text.match(/(\d+)\w*\s*(\d+)\w*\s*(\d+)\w*/);
+		text = text.toLowerCase();
+		let times = text.match(/(\d+)(\w*)\s*(\d+)?(\w*)\s*(\d+)?(\w*)/);
 		let textArr = text.split(' ');
-		textArr.splice(0, 4);
-		let mhd = true;
-		let mh, m, h, d = false;
+		let date = new Date();
 
-		if (times == null) {
-			mhd = false;
-			mh = true;
-			times = text.match(/(\d+)\w*\s*(\d+)\w*/);
-			textArr = text.split(' ');
-			textArr.splice(0, 3);
+		const local = {
+			AddM: (date, amount) => {
+				if (amount > 1800)
+					throw "Part of given time was above limit";
+				date.setTime(date.getTime() + amount * 60000);
+				return date;
+			},
 
-			if (times == null) {
-				mh = false;
-				m = true;
-				times = text.match(/(\d+)[mM]/);
-				textArr = text.split(' ');
-				textArr.splice(0, 2);
+			AddH: (date, amount) => {
+				if (amount > 144)
+					throw "Part of given time was above limit";
+				date.setTime(date.getTime() + amount * 3600000);
+				return date;
+			},
 
-				if (times == null) {
-					m = false;
-					h = true;
-					times = text.match(/(\d+)[hH]/);
-					textArr = text.split(' ');
-					textArr.splice(0, 2);
-
-					if (times == null) {
-						h = false;
-						d = true;
-						times = text.match(/(\d+)[dD]/);
-						textArr = text.split(' ');
-						textArr.splice(0, 2);
-					}
-				}
+			AddD: (date, amount) => {
+				if (amount > 60)
+					throw "Part of given time was above limit";
+				date.setTime(date.getTime() + amount * 864e5);
+				return date;
 			}
+		};
+
+		if (times[2] == null)
+			date = AddM(date, times[1]);
+		else
+			date = local["Add"+times[2].toUpperCase()](date, times[1]);
+
+		if (times[4] == null && times[3] != null)
+			date = AddH(date, times[3]);
+		else if (times[3] != null)
+			date = local["Add"+times[4].toUpperCase()](date, times[3]);
+
+		if (times[6] == null && times[5] != null)
+			date = AddD(date, times[5]);
+		else if (times[5] != null)
+			date = local["Add"+times[6].toUpperCase()](date, times[5]);
+
+		if (times[3] == null && times[5] == null) {
+			textArr.splice(0, 2);
+		} else if (times[5] == null) {
+			textArr.splice(0, 3);
+		} else {
+			textArr.splice(0, 4);
 		}
 
 		let reminder = {
@@ -48,108 +61,11 @@ module.exports = {
 			time: 		0
 		};
 
-		if (mhd) {
-			times.forEach((element, index) => {
-				times[index] = element.match(/\d+/);
-			});
-			if ((times[3] > 60 || times[2] > 144) || times[1] > 1800) {
-				throw "Part of given time was above limit";
-			}
-			let date = new Date();
-			date = AddDays(date, times[3]);
-			date = AddHours(date, times[2]);
-			date = AddMinutes(date, times[1]);
-			
-			reminder.time = date.getTime();
-			const dateString = date.toString().split(' ');
-			message.reply(`I have noted that you want to be reminded on the 
-						${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
-						${dateString[4]} ${dateString[5]}`);
-			return reminder;
-
-		} else if (mh) {
-			times.forEach((element, index) => {
-				times[index] = element.match(/\d+/);
-			});
-			if (times[2] > 144 || times[1] > 1800) {
-				throw "Part of given time was above limit";
-			}
-			let date = new Date();
-			date = AddHours(date, times[2]);
-			date = AddMinutes(date, times[1]);
-			
-			reminder.time = date.getTime();
-			const dateString = date.toString().split(' ');
-			message.reply(`I have noted that you want to be reminded on the 
-						${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
-						${dateString[4]} ${dateString[5]}`);
-			return reminder;
-
-		} else if (m) {
-			times.forEach((element, index) => {
-				times[index] = element.match(/\d+/);
-			});
-			if (times[1] > 1800) {
-				throw "Part of given time was above limit";
-			}
-			let date = new Date();
-			date = AddMinutes(date, times[1]);
-			
-			reminder.time = date.getTime();
-			const dateString = date.toString().split(' ');
-			message.reply(`I have noted that you want to be reminded on the 
-						${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
-						${dateString[4]} ${dateString[5]}`);
-			return reminder;
-
-		} else if (h) {
-			times.forEach((element, index) => {
-				times[index] = element.match(/\d+/);
-			});
-			if (times[1] > 144) {
-				throw "Part of given time was above limit";
-			}
-			let date = new Date();
-			date = AddHours(date, times[1]);
-			
-			reminder.time = date.getTime();
-			const dateString = date.toString().split(' ');
-			message.reply(`I have noted that you want to be reminded on the 
-						${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
-						${dateString[4]} ${dateString[5]}`);
-			return reminder;
-
-		} else if (d) {
-			times.forEach((element, index) => {
-				times[index] = element.match(/\d+/);
-			});
-			if (times[1] > 60) {
-				throw "Part of given time was above limit";
-			}
-			let date = new Date();
-			date = AddDays(date, times[1]);
-			
-			reminder.time = date.getTime();
-			const dateString = date.toString().split(' ');
-			message.reply(`I have noted that you want to be reminded on the 
-						${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
-						${dateString[4]} ${dateString[5]}`);
-			return reminder;
-		}
+		reminder.time = date.getTime();
+		const dateString = date.toString().split(' ');
+		message.reply(`I have noted that you want to be reminded on the 
+					${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
+					${dateString[4]} ${dateString[5]}`);
+		return reminder;
 	},
 };
-
-const AddMinutes = (date, amount) => {
-	date.setTime(date.getTime() + amount * 60000);
-	return date;
-}
-
-const AddHours = (date, amount) => {
-	date.setTime(date.getTime() + amount * 3600000);
-	return date;
-}
-
-const AddDays = (date, amount) => {
-	date.setTime(date.getTime() + amount * 864e5);
-	return date;
-}
