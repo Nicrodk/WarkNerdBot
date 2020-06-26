@@ -5,7 +5,7 @@ module.exports = {
 	execute(message, text) {
 
 		let withMod = true;
-		let parts = text.match(/(\d*)\s*[dD]\s*(\d+)\s*([+|-])\s*(\d+)/);
+		let parts = text.match(/(\d*)\s*[dD]\s*(\d+)\s*([+-])\s*(\d+)/);
 
 		if (parts == null) {
 			parts = text.match(/(\d*)\s*[dD]\s*(\d+)/);

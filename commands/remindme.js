@@ -1,13 +1,20 @@
 module.exports = {
 	name: 'remindme',
 	description: 'Create a reminder',
-	help: ' remindme Xidentifier Xidentifier Xidentifier text, creates a countdown for pinging the person with text maximum allowed days is 60, hours is 144 and minutes is 1800 (the limits are individual so you can do 1800minutes 144hours 60days) The the identifiers can be just [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, can do only 1 or 2 numbers+identifier if only want to specify reminder in m/h/d or mh/md/hd',
+	help: ' remindme Xidentifier Xidentifier Xidentifier text, creates a countdown for pinging the person with "text" maximum allowed days is 60, hours is 144, minutes is 1800 and seconds is 60000 (the limits are individual so you can do 1800minutes 144hours 60days) The the identifiers can be just [s|S], [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, can do only 1 or 2 numbers+identifier if only want to specify reminder in s/m/h/d or sm/sh/sd/mh/md/hd',
 	execute(message, text) {
-		let times = text.match(/(\d+)(\w*)\s*(\d+)?(\w*)\s*(\d+)?(\w*)/);
+		let times = text.match(/(\d+)(\w*)\s*(?:(\d+)(\w*)\s*)?(?:(\d+)(\w*))?/);
 		let textArr = text.split(' ');
 		let date = new Date();
 
 		const local = {
+			AddS: (date, amount) => {
+				if (amount > 60000)
+					throw "Part of given time was above limit";
+				date.setTime(date.getTime() + amount * 1000);
+				return date;
+			},
+
 			AddM: (date, amount) => {
 				if (amount > 1800)
 					throw "Part of given time was above limit";
@@ -18,7 +25,7 @@ module.exports = {
 			AddH: (date, amount) => {
 				if (amount > 144)
 					throw "Part of given time was above limit";
-				date.setTime(date.getTime() + amount * 3600000);
+				date.setTime(date.getTime() + amount * 36e5);
 				return date;
 			},
 
