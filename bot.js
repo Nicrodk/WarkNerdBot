@@ -1,4 +1,5 @@
 const {prefix, token} = require('./config.json');
+const helpEmbed = require('./HelpEmbed.js');
 const discord = require('discord.js');
 const logger = require('winston');
 const fs = require('fs');
@@ -17,9 +18,13 @@ for (const file of commandFiles) {
 }
 
 let helpString = "```";
-
+// let helpNames, helpParameters, helpDescriptions = [];
 client.commands.each(element => {
     helpString += "\n" + prefix + element.help;
+    /* helpNames.push(element.name);
+    helpParameters.push(element.parameters);
+    helpDescriptions.push(element.description);
+    */
 });
 helpString += "```";
 
@@ -62,6 +67,7 @@ const ParseCommand = (message, author) => {
     const cmd = args[0];
 
     if (cmd == "help") {
+        //helpEmbed.execute(message, helpNames, helpParameters, helpDescriptions);
         message.reply(helpString);
         return;
     }

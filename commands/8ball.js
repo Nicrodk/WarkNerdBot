@@ -20,14 +20,15 @@ const msgArr = [
 		"My reply is no",
 		"My sources say no",
 		"Outlook not so good",
-		"Very doubtful"];
+		"Very doubtful"
+		];
 
 module.exports = {
 	name: '8ball',
 	description: 'Answers for the questions',
 	help: ' 8ball <inqury>, What does the 8ball have to say today',
 	execute(message, text) {
-		const rand = seed(text + new Date().getHours());
+		const rand = seed(text + new Date().getHours() + message.author.id);
 		const number = rand();
 		msgArr.forEach((element, index) => {
 			if (number < 1/msgArr.length * (index+1) &&
