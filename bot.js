@@ -12,21 +12,22 @@ client.commands = new discord.Collection();
 const commandFiles = fs.readdirSync('./commands').filter(
                 file => file.endsWith('.js'));
 
+let helpNames = [];
+let helpParameters = [];
+let helpDescriptions = [];
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
     client.commands.set(command.name, command);
+    helpNames.push(command.name);
+    helpParameters.push(command.parameters);
+    helpDescriptions.push(command.explanation);
 }
 
-let helpString = "```";
-// let helpNames, helpParameters, helpDescriptions = [];
+/*let helpString = "```";
 client.commands.each(element => {
     helpString += "\n" + prefix + element.help;
-    /* helpNames.push(element.name);
-    helpParameters.push(element.parameters);
-    helpDescriptions.push(element.description);
-    */
 });
-helpString += "```";
+helpString += "```";*/
 
 client.login(token);
 
@@ -67,8 +68,8 @@ const ParseCommand = (message, author) => {
     const cmd = args[0];
 
     if (cmd == "help") {
-        //helpEmbed.execute(message, helpNames, helpParameters, helpDescriptions);
-        message.reply(helpString);
+        helpEmbed.execute(message, helpNames, helpParameters, helpDescriptions);
+        //message.reply(helpString);
         return;
     }
 
