@@ -28,7 +28,6 @@ module.exports = {
 	description: 'Answers for the questions',
 	parameters: 'inqury',
 	explanation: 'Ask the 8ball whatever you please and it will respond',
-	//help: ' 8ball <inqury>, What does the 8ball have to say today',
 	execute(message, text) {
 		const rand = seed(text + new Date().getHours() + message.author.id);
 		const number = rand();

@@ -3,7 +3,6 @@ module.exports = {
 	description: 'Rolling dice with format "!nb roll <diceAmount>d<diceSize>+-<modifier>"',
 	parameters: '<diceAmount>d<diceSize><+-><modifier>',
 	explanation: 'Roll some dice\ndiceAmount is limited to 99 and diceSize is limited to 1000\nleaving out diceAmount or putting it negative will have it set to 1 and then rolling\n+-<modifier> is optional and command does not care about spacing after "roll "',
-	//help: ' roll <diceAmount>[d|D]<diceSize>+-<modifier>, It does not care about spacing after "roll " diceamount left out will set it to 1, limits are set to 99 amount and 1000 size and amount <= 0 will be set to 1',
 	execute(message, text) {
 
 		let withMod = true;
