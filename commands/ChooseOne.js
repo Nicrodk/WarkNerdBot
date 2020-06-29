@@ -5,7 +5,7 @@ module.exports = {
 	explanation: 'Have the bot pick an option for you.',
 	execute(message, text) {
 		const parts = text.split(';');
-		const num = Math.floor(Math.random() * (parts.length+1));
+		const num = Math.floor(Math.random() * (parts.length));
 		message.reply(parts[num]);
 	},
 };
