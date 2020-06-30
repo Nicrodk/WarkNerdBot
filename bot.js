@@ -23,12 +23,6 @@ for (const file of commandFiles) {
     helpDescriptions.push(command.explanation);
 }
 
-/*let helpString = "```";
-client.commands.each(element => {
-    helpString += "\n" + prefix + element.help;
-});
-helpString += "```";*/
-
 client.login(token);
 
 client.on('ready', () => {
@@ -37,6 +31,10 @@ client.on('ready', () => {
     console.log('Logged in as: ' +
         client.user.username + ' - (' + client.user.id + ')');
 });
+
+/* let dbName = 'reminders';
+const mongoClient = new MongoClient("mongodb://127.0.0.1:33000", {useNewUrlParser: true, useUnifiedTopology: true});
+*/
 
 let reminderArr = [];
 
@@ -69,7 +67,6 @@ const ParseCommand = (message, author) => {
 
     if (cmd == "help") {
         helpEmbed.execute(message, helpNames, helpParameters, helpDescriptions);
-        //message.reply(helpString);
         return;
     }
 

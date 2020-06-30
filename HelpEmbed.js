@@ -32,7 +32,7 @@ module.exports = {
 		const leftArrow = '\u2B05\uFE0F';
 
 		const listEmbed = new discord.MessageEmbed()
-				.setColor('#007FFF')
+				.setColor('#2D9900')
 				.setTitle('List of commands')
 				.setDescription('React with the appropiate numbered reaction to get specific information about the command');
 
@@ -65,7 +65,7 @@ module.exports = {
 				collector.resetTimer({time: 2*60*1000});
 			} else {
 				const embed = new discord.MessageEmbed()
-					.setColor('#007FFF')
+					.setColor('#2D9900')
 					.setTitle(helpNames[index])
 					.setDescription('React with left arrow to go back')
 					.addField('Parameters', helpParameters[index])
