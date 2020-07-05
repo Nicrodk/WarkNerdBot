@@ -11,6 +11,7 @@ const msgArr = [
 		"Outlook good",
 		"Yes",
 		"Signs point to yes",
+		"You must consult the great squirrel council about this matter",
 		"Reply hazy, try again",
 		"Ask again later",
 		"Better not tell you now",

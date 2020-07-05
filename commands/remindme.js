@@ -3,7 +3,7 @@ module.exports = {
 	description: 'Create a reminder',
 	parameters: 'Xidentifier Xidentifier Xidentifier text',
 	explanation: 'Creates a countdown for pinging the person with "text"\nmaximum allowed days is 60, hours is 144, minutes is 1800 and seconds is 60000 (the limits are individual so you can do 1800minutes 144hours 60days)\nThe the identifiers can be just [s|S], [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, you can do just 1 or 2 numbers+identifier if you only want to specify reminder in s/m/h/d or sm/sh/sd/mh/md/hd',
-	execute(message, text) {
+	execute(message, text/*, db*/) {
 		let times = text.match(/(\d+)(\w*)\s*(?:(\d+)(\w*)\s*)?(?:(\d+)(\w*))?/);
 		let textArr = text.split(' ');
 		let date = new Date();
@@ -62,10 +62,10 @@ module.exports = {
 		}
 
 		let reminder = {
-			channelID:	message.channel.id,
-			userID: 	message.author.id,
-			text: 		textArr.join(' '),
-			time: 		0
+			"channelID":message.channel.id,
+			"userID": 	message.author.id,
+			"text": 	textArr.join(' '),
+			"time": 	0
 		};
 
 		reminder.time = date.getTime();
@@ -74,5 +74,6 @@ module.exports = {
 					${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
 					${dateString[4]} ${dateString[5]}`);
 		return reminder;
+		//db.collection(message.guild.id).insertOne(reminder);
 	},
 };

@@ -1,3 +1,5 @@
+/*const MongoClient = require('mongodb').MongoClient;
+const assert = require('assert');*/
 const {prefix, token} = require('./config.json');
 const helpEmbed = require('./HelpEmbed.js');
 const discord = require('discord.js');
@@ -32,14 +34,33 @@ client.on('ready', () => {
         client.user.username + ' - (' + client.user.id + ')');
 });
 
-/* let dbName = 'reminders';
+/*let db;
 const mongoClient = new MongoClient("mongodb://127.0.0.1:33000", {useNewUrlParser: true, useUnifiedTopology: true});
+mongoClient.connect(err => {
+    assert.equal(null, err);
+    const dbName = 'reminders';
+    console.log(`Successfully connected to the ${dbName} database.`);
+
+    db = mongoClient.db(dbName);
+});
 */
 
 let reminderArr = [];
 
 const checkReminders = () => {
     const currTime = new Date().getTime();
+    /*const guilds = client.guilds.cache.map(guild => guild.id);
+    guilds.forEach(guild => {
+        db.collection(guild).find({}).toArray((err, reminder) => {
+            reminder.forEach(element => {
+                if (currTime > element.time) {
+                    const channel = client.channels.cache.get(element.channelID);
+                    channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
+                    db.collection(guild).deleteOne({'_id' : element._id});
+                }
+            });
+        });
+    });*/
     let delArr = [];
     if (reminderArr.length > 0) {
         reminderArr.forEach((element, index) => {
@@ -77,7 +98,7 @@ const ParseCommand = (message, author) => {
 
     if (cmd == "remindme") {
         try {
-            reminderArr.push(client.commands.get(cmd).execute(message, messageText[1]));
+            reminderArr.push(client.commands.get(cmd).execute(message, messageText[1]/*, db*/));
         } catch (error) {
             console.error(error);
             if (error === "Part of given time was above limit") {

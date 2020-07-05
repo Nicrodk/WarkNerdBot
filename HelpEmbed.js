@@ -75,6 +75,10 @@ module.exports = {
 				m.edit(embed);
 				await m.react(leftArrow);
 			}
-		});		
+		});
+		
+		collector.on('end', () => {
+			m.reactions.removeAll();
+		});
 	},
 };
