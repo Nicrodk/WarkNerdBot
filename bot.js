@@ -1,6 +1,5 @@
-/*const MongoClient = require('mongodb').MongoClient;
-const assert = require('assert');*/
-const {prefix, token} = require('./config.json');
+const MongoClient = require('mongodb').MongoClient;
+const {prefix, token, mongoIP} = require('./config.json');
 const helpEmbed = require('./HelpEmbed.js');
 const discord = require('discord.js');
 const logger = require('winston');
@@ -34,34 +33,42 @@ client.on('ready', () => {
         client.user.username + ' - (' + client.user.id + ')');
 });
 
-/*let db;
-const mongoClient = new MongoClient("mongodb://127.0.0.1:33000", {useNewUrlParser: true, useUnifiedTopology: true});
+let db;
+const mongoClient = new MongoClient(mongoIP, {useNewUrlParser: true, useUnifiedTopology: true});
 mongoClient.connect(err => {
-    assert.equal(null, err);
+    if (err) {
+        console.log("Could not connect to DB " + err);
+        throw "could not connect to db";
+    }
     const dbName = 'reminders';
-    console.log(`Successfully connected to the ${dbName} database.`);
-
     db = mongoClient.db(dbName);
+
+    console.log(`Successfully connected to the ${dbName} database.`);
 });
-*/
+
 
 let reminderArr = [];
 
 const checkReminders = () => {
     const currTime = new Date().getTime();
-    /*const guilds = client.guilds.cache.map(guild => guild.id);
+    const guilds = client.guilds.cache.map(guild => guild.id);
     guilds.forEach(guild => {
         db.collection(guild).find({}).toArray((err, reminder) => {
+            const length = reminder.length;
             reminder.forEach(element => {
                 if (currTime > element.time) {
                     const channel = client.channels.cache.get(element.channelID);
                     channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
                     db.collection(guild).deleteOne({'_id' : element._id});
+                    if (length <= 1) {
+                        clearInterval(reminderUpdate);
+                        reminderUpdate = false;
+                    }
                 }
             });
         });
-    });*/
-    let delArr = [];
+    });
+    /*let delArr = [];
     if (reminderArr.length > 0) {
         reminderArr.forEach((element, index) => {
             if (currTime > element.time) {
@@ -73,11 +80,11 @@ const checkReminders = () => {
         delArr.forEach(element => {
             reminderArr.splice(element, 1);
         });
-    }
+    }*/
 }
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
-const reminderUpdate = setInterval(checkReminders, 15 * 1000);
+let reminderUpdate = setInterval(checkReminders, 30 * 1000);
 
 const ParseCommand = (message, author) => {
 
@@ -97,8 +104,15 @@ const ParseCommand = (message, author) => {
     messageText = message.content.split(prefix + ' ' + cmd);
 
     if (cmd == "remindme") {
+        /*if (message.content.includes("<@")) { //check for pings
+            message.reply("Pings are not allowed in reminders.");
+            return;
+        }*/
         try {
-            reminderArr.push(client.commands.get(cmd).execute(message, messageText[1]/*, db*/));
+            //reminderArr.push(client.commands.get(cmd).execute(message, messageText[1], db));
+            client.commands.get(cmd).execute(message, messageText[1], db);
+            if (reminderUpdate === false)
+                reminderUpdate = setInterval(checkReminders, 30 * 1000);
         } catch (error) {
             console.error(error);
             if (error === "Part of given time was above limit") {
