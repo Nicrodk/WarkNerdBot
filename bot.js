@@ -47,27 +47,47 @@ mongoClient.connect(err => {
 });
 
 
-let reminderArr = [];
+//let reminderArr = [];
+
+const nyaissaknife = client.emojis.cache.find(emoji => emoji.name == 'nyaissaknife');
+const nyaissabap = client.emojis.cache.find(emoji => emoji.name == 'nyaissabap');
+const nyaissabapped = client.emojis.cache.find(emoji => emoji.name == 'nyaissabapped');
 
 const checkReminders = () => {
     const currTime = new Date().getTime();
     const guilds = client.guilds.cache.map(guild => guild.id);
+    let remindersActive = false;
     guilds.forEach(guild => {
         db.collection(guild).find({}).toArray((err, reminder) => {
-            const length = reminder.length;
+            let length = reminder.length;
             reminder.forEach(element => {
                 if (currTime > element.time) {
                     const channel = client.channels.cache.get(element.channelID);
-                    channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
+                    m = channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
                     db.collection(guild).deleteOne({'_id' : element._id});
-                    if (length <= 1) {
-                        clearInterval(reminderUpdate);
-                        reminderUpdate = false;
-                    }
+                    
+                    const filter = (message, user) => user.id == element.userID;
+                    const collector = m.createMessageCollector(filter, {time: 5*60*1000});
+                    collector.on('collect', (message, user) => {
+                        if (message.content.toLowerCase().includes('bitch'))
+                            message.channel.send(`${nyaissaknife}`);
+                        else if (message.content.includes(`${nyaissabap}`))
+                            message.channel.send(`${nyaissabapped}`);
+
+                        collector.stop("User send a message");
+                    });
+                    length--;
                 }
+                if (length >= 1)
+                    remindersActive = true;
             });
         });
     });
+
+    if (!remindersActive) {
+        clearInterval(reminderUpdate);
+        reminderUpdate = false;
+    }
     /*let delArr = [];
     if (reminderArr.length > 0) {
         reminderArr.forEach((element, index) => {
@@ -125,7 +145,7 @@ const ParseCommand = (message, author) => {
     }
 
     try {
-        client.commands.get(cmd).execute(message, messageText[1]);
+        client.commands.get(cmd).execute(message, messageText[1], db);
     } catch (error) {
         console.error(error);
         message.reply(`there was an error trying to execute that command`);
