@@ -73,7 +73,6 @@ module.exports = {
 		message.reply(`I have noted that you want to be reminded on the 
 					${dateString[2]} of ${dateString[1]} ${dateString[3]} at 
 					${dateString[4]} ${dateString[5]}`);
-		//return reminder;
 		db.collection(message.guild.id).insertOne(reminder);
 	},
 };

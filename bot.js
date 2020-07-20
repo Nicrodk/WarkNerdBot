@@ -46,41 +46,59 @@ mongoClient.connect(err => {
     console.log(`Successfully connected to the ${dbName} database.`);
 });
 
-
-let reminderArr = [];
+//random failed attempts at getting emotes programatically
+/*let nyaissaknife, nyaissabap, nyaissabapped;
+{
+    const guilds = client.guilds.cache.map(guild => guild.id);
+    guilds.forEach(async guild => {
+        if (nyaissaknife == null)
+            nyaissaknife = await guild.emojis.cache.get("591695615516213309");
+        if (nyaissabap == null)
+            nyaissabap = await guild.emojis.cache.get("578493406800773121");
+        if (nyaissabapped == null)
+            nyaissabapped = await guild.emojis.cache.get("578493464627642378");
+    });
+}*/
+//const nyaissaknife = client.emojis.cache.get("591695615516213309");
+//const nyaissabap = client.emojis.cache.get("578493406800773121");
+//const nyaissabapped = client.emojis.cache.get("578493464627642378");
+//console.log(nyaissaknife.name);
 
 const checkReminders = () => {
     const currTime = new Date().getTime();
     const guilds = client.guilds.cache.map(guild => guild.id);
+    let remindersActive = false;
     guilds.forEach(guild => {
         db.collection(guild).find({}).toArray((err, reminder) => {
-            const length = reminder.length;
+            let length = reminder.length;
             reminder.forEach(element => {
                 if (currTime > element.time) {
                     const channel = client.channels.cache.get(element.channelID);
                     channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
                     db.collection(guild).deleteOne({'_id' : element._id});
-                    if (length <= 1) {
-                        clearInterval(reminderUpdate);
-                        reminderUpdate = false;
-                    }
+                    
+                    const filter = message => message.author.id == element.userID;
+                    const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000});
+                    collector.on('collect', message => {
+                        if (message.content.toLowerCase().includes('bitch'))
+                            message.channel.send(`<:nyaissaknife:591695615516213309>`);
+                        else if (message.content.includes('aissabap'))
+                            message.channel.send(`<:nyaissabapped:578493464627642378>`);
+
+                        collector.stop("User send a message");
+                    });
+                    length--;
                 }
+                if (length >= 1)
+                    remindersActive = true;
             });
         });
     });
-    /*let delArr = [];
-    if (reminderArr.length > 0) {
-        reminderArr.forEach((element, index) => {
-            if (currTime > element.time) {
-                const channel = client.channels.cache.get(element.channelID);
-                channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
-                delArr.unshift(index);
-            }
-        });
-        delArr.forEach(element => {
-            reminderArr.splice(element, 1);
-        });
-    }*/
+
+    if (!remindersActive) {
+        clearInterval(reminderUpdate);
+        reminderUpdate = false;
+    }
 }
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
@@ -109,7 +127,6 @@ const ParseCommand = (message, author) => {
             return;
         }*/
         try {
-            //reminderArr.push(client.commands.get(cmd).execute(message, messageText[1], db));
             client.commands.get(cmd).execute(message, messageText[1], db);
             if (reminderUpdate === false)
                 reminderUpdate = setInterval(checkReminders, 30 * 1000);
@@ -125,7 +142,7 @@ const ParseCommand = (message, author) => {
     }
 
     try {
-        client.commands.get(cmd).execute(message, messageText[1]);
+        client.commands.get(cmd).execute(message, messageText[1], db);
     } catch (error) {
         console.error(error);
         message.reply(`there was an error trying to execute that command`);

@@ -29,7 +29,7 @@ module.exports = {
 	description: 'Answers for the questions',
 	parameters: 'inqury',
 	explanation: 'Ask the 8ball whatever you please and it will respond',
-	execute(message, text) {
+	execute(message, text, db) {
 		const rand = seed(text + new Date().getHours() + message.author.id);
 		const number = rand();
 		msgArr.forEach((element, index) => {

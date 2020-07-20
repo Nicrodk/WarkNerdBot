@@ -3,7 +3,7 @@ module.exports = {
 	description: 'Rolling dice with format "!nb roll <diceAmount>d<diceSize>+-<modifier>"',
 	parameters: '<diceAmount>d<diceSize><+-><modifier>',
 	explanation: 'Roll some dice\ndiceAmount is limited to 99 and diceSize is limited to 1000\nleaving out diceAmount or putting it negative will have it set to 1 and then rolling\n+-<modifier> is optional and command does not care about spacing after "roll "',
-	execute(message, text) {
+	execute(message, text, db) {
 
 		let withMod = true;
 		let parts = text.match(/(\d*)\s*[dD]\s*(\d+)\s*([+-])\s*(\d+)/);
