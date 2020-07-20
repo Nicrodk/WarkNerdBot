@@ -6,10 +6,16 @@ module.exports = {
 	execute(message, text, db) {
 		let replyString = "";
 		db.collection(message.guild.id).find({}).toArray((err, reminders) => {
-			reminder.forEach((element, index) => {
-				replyString += `${index}: ${element.userID} ${element.text}\n`;
+			reminders.forEach((element, index) => {
+				let name = message.guild.member(element.userID).nickname;
+				if (name == null)
+					name = message.guild.member(element.userID).user.username;
+				replyString += index+1 + ": " + name + " " + element.text + "\n";
 			});
+			if (replyString != "")
+				message.channel.send(replyString);
+			else
+				message.channel.send("No reminders found");
 		});
-		message.channel.send(replyString);
 	},
 };
