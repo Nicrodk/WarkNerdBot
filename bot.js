@@ -64,40 +64,37 @@ mongoClient.connect(err => {
 //const nyaissabapped = client.emojis.cache.get("578493464627642378");
 //console.log(nyaissaknife.name);
 
-const checkReminders = () => {
+const checkReminders = async () => {
     const currTime = new Date().getTime();
     const guilds = client.guilds.cache.map(guild => guild.id);
     let remindersActive = false;
     for (let i = 0; i < guilds.length; i++) {
-        db.collection(guilds[i]).find({}).toArray((err, reminder) => {
-            let length = reminder.length;
-            reminder.forEach(element => {
-                if (currTime > element.time) {
-                    const channel = client.channels.cache.get(element.channelID);
-                    channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
-                    db.collection(guilds[i]).deleteOne({'_id' : element._id});
-                    
-                    const filter = message => message.author.id == element.userID;
-                    const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000});
-                    collector.on('collect', message => {
-                        if (message.content.toLowerCase().includes('bitch'))
-                            message.reply(`<:nyaissaknife:591695615516213309>`);
-                        else if (message.content.includes('aissabap'))
-                            message.channel.send(`<:nyaissabapped:578493464627642378>`);
+        const reminder = await db.collection(guilds[i]).find({}).toArray();
+        let length = reminder.length;
+        reminder.forEach(element => {
+            if (currTime > element.time) {
+                const channel = client.channels.cache.get(element.channelID);
+                channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
+                db.collection(guilds[i]).deleteOne({'_id' : element._id});
+                
+                const filter = message => message.author.id == element.userID;
+                const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000});
+                collector.on('collect', message => {
+                    if (message.content.toLowerCase().includes('bitch'))
+                        message.reply(`<:nyaissaknife:591695615516213309>`);
+                    else if (message.content.includes('aissabap'))
+                        message.channel.send(`<:nyaissabapped:578493464627642378>`);
 
-                        collector.stop("User send a message");
-                    });
-                    length--;
-                }
-            });
-            if (length >= 1)
-                remindersActive = true;
-            if (i == guilds.length-1) {
-                if (!remindersActive) {
-                    reminderUpdate = false;
-                }
+                    collector.stop("User send a message");
+                });
+                length--;
             }
         });
+        if (length >= 1)
+            remindersActive = true;
+    }
+    if (!remindersActive) {
+        reminderUpdate = false;
     }
 }
 
