@@ -31,6 +31,7 @@ client.on('ready', () => {
     console.log('Connected');
     console.log('Logged in as: ' +
         client.user.username + ' - (' + client.user.id + ')');
+    client.user.setActivity("Trying its best");
 });
 
 let db;
