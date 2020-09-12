@@ -5,9 +5,9 @@
 	"main": "bot.js",
 	"author": "Nicrodk",
 	"dependencies": {
-		"discord.js": "^12.2.0",
-		"mongodb": "^3.5.9",
+		"discord.js": "^12.3.1",
+		"mongodb": "^3.6.2",
 		"seedrandom": "^3.0.5",
-		"winston": "^3.3.0"
+		"winston": "^3.3.3"
 	}
 }
