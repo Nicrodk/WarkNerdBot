@@ -9,9 +9,11 @@ const reactArr = [
 		'\u0036\uFE0F\u20E3',
 		'\u0037\uFE0F\u20E3',
 		'\u0038\uFE0F\u20E3',
-		'\u0039\uFE0F\u20E3'
+		'\u0039\uFE0F\u20E3',
+		'\u0030\uFE0F\u20E3'
 		];
 
+//(65)\u0041 = A (90)\u005A = Z \u00C6 = Æ \u00D8 = Ø \u00C5 = Å
 /*const reactNames = [
 		'1️⃣',
 		'2️⃣',
