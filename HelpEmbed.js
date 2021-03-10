@@ -14,18 +14,6 @@ const reactArr = [
 		];
 
 //(65)\u0041 = A (90)\u005A = Z \u00C6 = Æ \u00D8 = Ø \u00C5 = Å
-/*const reactNames = [
-		'1️⃣',
-		'2️⃣',
-		'3️⃣',
-		'4️⃣',
-		'5️⃣',
-		'6️⃣',
-		'7️⃣',
-		'8️⃣',
-		'9️⃣',
-		'0️⃣'
-		];*/
 
 module.exports = {
 	name: 'helpembed',

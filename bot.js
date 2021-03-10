@@ -1,8 +1,9 @@
 const MongoClient = require('mongodb').MongoClient;
-const {prefix, token, mongoIP} = require('./config.json');
+const config = require('./config.json');
 const helpEmbed = require('./HelpEmbed.js');
 const discord = require('discord.js');
 const logger = require('winston');
+const https = require('https');
 const fs = require('fs');
 
 // Initialize discord client
@@ -24,18 +25,18 @@ for (const file of commandFiles) {
     helpDescriptions.push(command.explanation);
 }
 
-client.login(token);
+client.login(config.token);
 
 client.on('ready', () => {
 
     console.log('Connected');
     console.log('Logged in as: ' +
-        client.user.username + ' - (' + client.user.id + ')');
+    client.user.username + ' - (' + client.user.id + ')');
     client.user.setActivity("Trying its best");
 });
 
 let db;
-const mongoClient = new MongoClient(mongoIP, {useNewUrlParser: true, useUnifiedTopology: true});
+const mongoClient = new MongoClient(config.mongoIP, {useNewUrlParser: true, useUnifiedTopology: true});
 mongoClient.connect(err => {
     if (err) {
         console.log("Could not connect to DB " + err);
@@ -46,6 +47,28 @@ mongoClient.connect(err => {
 
     console.log(`Successfully connected to the ${dbName} database.`);
 });
+
+const twitchOptions = {
+    hostname: `id.twitch.tv`,
+    method: 'POST',
+    path: `/oauth2/token?client_id=${config.twitchClientID}&client_secret=${config.twitchClientSecret}&grant_type=client_credentials`
+}
+
+let twitchAcessToken;
+const twitchReq = https.request(twitchOptions, res => {
+    console.log(`statusCode: ${res.statusCode} statusMessage: ${res.statusMessage}`);
+
+    res.on('data', d => {
+        console.log(JSON.parse(d));
+        twitchAcessToken = d.access_token;
+    });
+});
+
+twitchReq.on('error', err => {
+    console.log(err);
+});
+
+twitchReq.end();
 
 //random failed attempts at getting emotes programatically
 /*let nyaissaknife, nyaissabap, nyaissabapped;
@@ -122,7 +145,7 @@ const ParseCommand = (message, author) => {
     if (!client.commands.has(cmd))
         return;
 
-    messageText = message.content.split(prefix + ' ' + cmd);
+    messageText = message.content.split(config.prefix + ' ' + cmd);
 
     if (cmd == "remindme") {
         /*if (message.content.includes("<@")) { //check for pings
@@ -156,7 +179,7 @@ client.on('message', (message) => {
 
     const author = message.author;
 
-    if (!message.content.startsWith(prefix) || message.author.bot)
+    if (!message.content.startsWith(config.prefix) || message.author.bot)
         return;
 
     ParseCommand(message, author);
