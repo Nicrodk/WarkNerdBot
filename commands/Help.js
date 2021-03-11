@@ -4,5 +4,6 @@ module.exports = {
 	parameters: 'none',
 	explanation: 'shows the help list',
 	execute(message, text, db) {
+		//This command is handled in bot.js via the helpembed.js file but is here so it is part of the commandlist
 	},
 };
