@@ -34,7 +34,7 @@ module.exports = {
 	description: 'Command to create a poll of the given parameters',
 	parameters: 'Question;option1;option2;option3;...;option10',
 	explanation: 'Create a poll with upwards of 10 different entries which will have reactions put on the message allowing people to vote',
-	execute(message, text, db) {
+	execute(message, text, db, twitchDb) {
 		const parts = text.split(';');
 		let reply = `<@${message.author.id}> asks: ` + parts[0] + "\n";
 		parts.splice(0, 1);
