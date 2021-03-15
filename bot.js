@@ -53,14 +53,14 @@ const updateOnlineStatus = async () => {
     const streamNames = await twitchDb.collection('followEntries').find({}).toArray();
     let newArr = [];
     for (let i = 0; i < streamNames.length; i++) {
-        const foundIndex = newArr.findIndex(element => element.name == entry.name);
-        if (foundIndex >= 0 && !newArr[foundIndex].channelIDs.includes(entry.channelID))
-            newArr[foundIndex].channelIDs.push(entry.channelID);
+        const foundIndex = newArr.findIndex(element => element.name == streamNames[i].name);
+        if (foundIndex >= 0 && !newArr[foundIndex].channelIDs.includes(streamNames[i].channelID))
+            newArr[foundIndex].channelIDs.push(streamNames[i].channelID);
         else if (foundIndex == -1)
-            newArr.push({'name': entry.name, 'status': "offline", 'channelIDs': [entry.channelID]});
+            newArr.push({'name': streamNames[i].name, 'status': "offline", 'channelIDs': [streamNames[i].channelID]});
     }
     for (let i = 0; i < newArr.length; i++) {
-        const foundIndex = onlineStatus.findIndex(element => element.name == entry.name);
+        const foundIndex = onlineStatus.findIndex(element => element.name == streamNames[i].name);
         if (foundIndex >= 0)
             newArr[i].status = onlineStatus[foundIndex].status;
     }
@@ -114,12 +114,13 @@ const checkTwitchChannels = () => {
                     console.log(response.data);
                     let foundArr = [];
                     response.data.data.forEach(entry => {
+                        console.log(entry);
                         const foundIndex = onlineStatus.findIndex(element => element.name == entry.user_login);
-                        if (found >= 0 && onlineStatus[found].status != entry.type) {
+                        if (foundIndex >= 0 && onlineStatus[foundIndex].status != entry.type) {
                             foundArr.push(entry.user_login);
-                            onlineStatus[found].status = entry.type;
-                            twitchEmbed.execute(client, entry, pingRoles, onlineStatus[found].channelIDs);
-                        } else if (found == -1) {
+                            onlineStatus[foundIndex].status = entry.type;
+                            twitchEmbed.execute(client, entry, pingRoles, onlineStatus[foundIndex].channelIDs);
+                        } else if (foundIndex == -1) {
                             console.log("Stream data received for non followed stream");
                         }
                     });
@@ -128,7 +129,7 @@ const checkTwitchChannels = () => {
                             onlineStatus[index].status = "offline";
                     });
                 }).catch(err => {
-                    console.log(err.response);
+                    console.log(err.response.data);
 
                     if (err.response.status == 401) {
                         getTwitchAccessToken();
