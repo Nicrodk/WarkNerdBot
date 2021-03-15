@@ -6,10 +6,9 @@ module.exports = {
 	execute(message, text, reminderDb, twitchDb) {
 		twitchDb.collection('pingRoles').findOne({'guildID': message.guild.id}).then(pingRole => {
 			if (pingRole) {
-				twitchDb.collection('pingRoles').updateOne({'guildID': message.guild.id}, {'pingRole': text})
+				twitchDb.collection('pingRoles').updateOne({'guildID': message.guild.id}, {$set: {'pingRole': text}})
 					.then(() => {
-						const role = message.guild.roles.cache.find(role => role.id == text.match(/(\d+)/));
-						message.reply(`I have succesfully updated this servers pingrole to ${role.name}`);
+						message.reply(`I have succesfully updated this servers pingrole to ${text}`);
 					}).catch(err => {
 						console.log(err);
 						message.reply('An error happened while trying to update the ping role');

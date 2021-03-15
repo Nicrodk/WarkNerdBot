@@ -113,7 +113,7 @@ const checkTwitchChannels = () => {
                 }).then(response => {
                     console.log(response.data);
                     let foundArr = [];
-                    response.data.forEach(entry => {
+                    response.data.data.forEach(entry => {
                         const foundIndex = onlineStatus.findIndex(element => element.name == entry.user_login);
                         if (found >= 0 && onlineStatus[found].status != entry.type) {
                             foundArr.push(entry.user_login);
@@ -128,8 +128,8 @@ const checkTwitchChannels = () => {
                             onlineStatus[index].status = "offline";
                     });
                 }).catch(err => {
-                    console.log(err.response.data);
-        
+                    console.log(err.response);
+
                     if (err.response.status == 401) {
                         getTwitchAccessToken();
                         setTimeout(checkTwitchChannels, 3000);
@@ -198,7 +198,7 @@ const ParseCommand = (message, author) => {
     } else if (!client.commands.has(cmd))
         return;
 
-    messageText = message.content.split(config.prefix + ' ' + cmd);
+    messageText = message.content.split(config.prefix + ' ' + cmd + ' ');
 
     if (cmd === "remindme") {
         /*if (message.content.includes("<@")) { //check for pings

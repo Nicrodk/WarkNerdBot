@@ -11,7 +11,8 @@ module.exports = {
 				const twitchEntry = {
 				"name": 	text,
 				"status": 	"offline",
-				"channelID":message.channel.id
+				"channelID":message.channel.id,
+				"guildID": 	message.guild.id
 				};
 
 				twitchDb.collection('followEntries').insertOne(twitchEntry).then(() => {
