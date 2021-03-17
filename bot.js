@@ -73,10 +73,10 @@ mongoClient.connect(err => {
         console.log("Could not connect to db " + err);
         throw "could not connect to db";
     }
-    reminderDb = mongoClient.db('testReminders');
+    reminderDb = mongoClient.db('Reminders');
     console.log(`Successfully connected to the reminders database.`);
 
-    twitchDb = mongoClient.db('testTwitchStuff');
+    twitchDb = mongoClient.db('TwitchStuff');
     console.log(`Successfully connected to the twitchStuff database.`);
 
     initializeOnlineStatus();
@@ -111,15 +111,16 @@ const checkTwitchChannels = () => {
                 axios.get(twitchGetRequest, {
                     headers: {'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken}
                 }).then(response => {
-                    console.log(response.data);
+                    console.log(Date() + "\n" + response.data);
                     let foundArr = [];
                     response.data.data.forEach(entry => {
-                        console.log(entry);
                         const foundIndex = onlineStatus.findIndex(element => element.name == entry.user_login);
                         if (foundIndex >= 0 && onlineStatus[foundIndex].status != entry.type) {
                             foundArr.push(entry.user_login);
                             onlineStatus[foundIndex].status = entry.type;
                             twitchEmbed.execute(client, entry, pingRoles, onlineStatus[foundIndex].channelIDs);
+                        } else if (foundIndex >= 0 && onlineStatus[foundIndex].status == entry.type) {
+                            foundArr.push(entry.user_login);
                         } else if (foundIndex == -1) {
                             console.log("Stream data received for non followed stream");
                         }
