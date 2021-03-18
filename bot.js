@@ -73,7 +73,7 @@ mongoClient.connect(err => {
         console.log("Could not connect to db " + err);
         throw "could not connect to db";
     }
-    reminderDb = mongoClient.db('Reminders');
+    reminderDb = mongoClient.db('reminders');
     console.log(`Successfully connected to the reminders database.`);
 
     twitchDb = mongoClient.db('TwitchStuff');
@@ -111,7 +111,8 @@ const checkTwitchChannels = () => {
                 axios.get(twitchGetRequest, {
                     headers: {'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken}
                 }).then(response => {
-                    console.log(Date() + "\n" + response.data);
+                    console.log(Date());
+                    console.log(response.data.data);
                     let foundArr = [];
                     response.data.data.forEach(entry => {
                         const foundIndex = onlineStatus.findIndex(element => element.name == entry.user_login);
