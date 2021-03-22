@@ -13,7 +13,7 @@ const client = new discord.Client();
 client.autorun = true;
 client.commands = new discord.Collection();
 const commandFiles = fs.readdirSync('./commands').filter(
-                file => file.endsWith('.js'));
+  file => file.endsWith('.js'));
 
 let helpNames = [];
 let helpParameters = [];
@@ -85,61 +85,57 @@ mongoClient.connect(err => {
 let twitchAccessToken;
 
 const accessTokenRequest =
-    'https://id.twitch.tv/oauth2/token' +
-    `?client_id=${config.twitchClientID}` +
-    `&client_secret=${config.twitchClientSecret}` +
-    '&grant_type=client_credentials';
+  'https://id.twitch.tv/oauth2/token' +
+  `?client_id=${config.twitchClientID}` +
+  `&client_secret=${config.twitchClientSecret}` +
+  '&grant_type=client_credentials';
 
-const getTwitchAccessToken = () => {
-    axios.post(accessTokenRequest, {}).then(res => {
-        console.log(`statusCode: ${res.status} statusMessage: ${res.statusText}`);
-        console.log(res.data);
-        twitchAccessToken = res.data.access_token;
-    }).catch(err => {
-        console.error(err);
-    });
-}
+const getTwitchAccessToken = () =>
+  axios.post(accessTokenRequest, {}).then(res => {
+      console.log(`statusCode: ${res.status} statusMessage: ${res.statusText}`);
+      console.log(res.data);
+      twitchAccessToken = res.data.access_token;
+  }).catch(console.error);
 
-const checkTwitchChannels = () => {
+const checkTwitchChannels = async () => {
     if (onlineStatus.length > 0) {
-        twitchDb.collection('pingRoles').find({}).toArray().then(pingRoles => {
-            if (pingRoles.length > 0) {
-                let twitchGetRequest = `https://api.twitch.tv/helix/streams?user_login=${onlineStatus[0].name}`;
-                for (let i = 1; i < onlineStatus.length; i++) {
-                    twitchGetRequest += '&user_login=' + onlineStatus[i].name;
-                }
-                axios.get(twitchGetRequest, {
-                    headers: {'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken}
-                }).then(response => {
-                    console.log(Date());
-                    console.log(response.data.data);
-                    let foundArr = [];
-                    response.data.data.forEach(entry => {
-                        const foundIndex = onlineStatus.findIndex(element => element.name == entry.user_login);
-                        if (foundIndex >= 0 && onlineStatus[foundIndex].status != entry.type) {
-                            foundArr.push(entry.user_login);
-                            onlineStatus[foundIndex].status = entry.type;
-                            twitchEmbed.execute(client, entry, pingRoles, onlineStatus[foundIndex].channelIDs);
-                        } else if (foundIndex >= 0 && onlineStatus[foundIndex].status == entry.type) {
-                            foundArr.push(entry.user_login);
-                        } else if (foundIndex == -1) {
-                            console.log("Stream data received for non followed stream");
-                        }
-                    });
-                    onlineStatus.forEach((element, index) => {
-                        if (!foundArr.includes(element.name))
-                            onlineStatus[index].status = "offline";
-                    });
-                }).catch(err => {
-                    console.log(err.response.data);
-
-                    if (err.response.status == 401) {
-                        getTwitchAccessToken();
-                        setTimeout(checkTwitchChannels, 3000);
+        const pingRoles = await twitchDb.collection('pingRoles').find({}).toArray()
+        if (pingRoles.length > 0) {
+            let twitchGetRequest = `https://api.twitch.tv/helix/streams?user_login=${onlineStatus[0].name}`;
+            for (let i = 1; i < onlineStatus.length; i++) {
+                twitchGetRequest += '&user_login=' + onlineStatus[i].name;
+            }
+            try {
+                const response = await axios.get(twitchGetRequest, {
+                    headers: { 'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken }
+                })
+                console.log(Date(), response.data.data);
+                let foundArr = [];
+                response.data.data.forEach(entry => {
+                    const foundElement = onlineStatus.find(element => element.name == entry.user_login)
+                    if (!foundElement) {
+                        console.log("Stream data received for non followed stream");
+                    } else if (foundElement.status != entry.type) {
+                        foundArr.push(entry.user_login);
+                        foundElement.status = entry.type;
+                        twitchEmbed.execute(client, entry, pingRoles, foundElement.channelIDs);
+                    } else if (foundElement.status == entry.type) {
+                        foundArr.push(entry.user_login);
                     }
                 });
+                onlineStatus.forEach((element, index) => {
+                    if (!foundArr.includes(element.name)) {
+                        onlineStatus[index].status = "offline";
+                    }
+                });
+            } catch (err) {
+                console.log(err.response.data);
+                if (err.response.status == 401) {
+                    await getTwitchAccessToken()
+                      .then(checkTwitchChannels)
+                }
             }
-        });
+        }
     }
 }
 
@@ -155,7 +151,7 @@ const checkReminders = async () => {
                 const channel = client.channels.cache.get(element.channelID);
                 channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
                 reminderDb.collection(guilds[i]).deleteOne({'_id' : element._id});
-                
+
                 const filter = message => message.author.id == element.userID;
                 const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000});
                 collector.on('collect', message => {
@@ -185,7 +181,7 @@ let onlineStatusUpdate = setInterval(updateOnlineStatus, 60 * 1000);
 const ParseCommand = (message, author) => {
 
     const lowerCase = message.content.toLowerCase();
-    
+
     let args = lowerCase.substring(config.prefix.length + 1).split(' ');
     const cmd = args[0];
 
