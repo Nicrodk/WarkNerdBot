@@ -38,7 +38,7 @@ module.exports = {
     description: 'Command that will show a list of your reminders and allow you to select the one you want deleted',
     parameters: 'none',
     explanation: 'Gives the list of reminders and allows for selection of one to delete',
-    execute(message, text, db) {
+    execute(message, text, db, twitchDb) {
         let replyString = "";
         let amount = 0;
         db.collection(message.guild.id).find({"userID" : message.author.id}).toArray((err, reminders) => {
