@@ -9,7 +9,7 @@ module.exports = {
 		const twitchEmbed = {
 			color: 0x9147FF,
 			title: userData.user_name + " has gone live!",
-			description: userData.title + "\n" + `Playing ${userData.game_name}.`,
+			description: `${userData.title}\nPlaying ${userData.game_name}.\n[Watch now, click here](https://twitch.tv/${userData.user_name})`,
 			image: {
 				url: imageURL
 			}

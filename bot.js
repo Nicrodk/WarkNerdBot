@@ -85,17 +85,17 @@ mongoClient.connect(err => {
 let twitchAccessToken;
 
 const accessTokenRequest =
-  'https://id.twitch.tv/oauth2/token' +
-  `?client_id=${config.twitchClientID}` +
-  `&client_secret=${config.twitchClientSecret}` +
-  '&grant_type=client_credentials';
+    'https://id.twitch.tv/oauth2/token' +
+    `?client_id=${config.twitchClientID}` +
+    `&client_secret=${config.twitchClientSecret}` +
+    '&grant_type=client_credentials';
 
 const getTwitchAccessToken = () =>
-  axios.post(accessTokenRequest, {}).then(res => {
-      console.log(`statusCode: ${res.status} statusMessage: ${res.statusText}`);
-      console.log(res.data);
-      twitchAccessToken = res.data.access_token;
-  }).catch(console.error);
+    axios.post(accessTokenRequest, {}).then(res => {
+        console.log(`statusCode: ${res.status} statusMessage: ${res.statusText}`);
+        console.log(res.data);
+        twitchAccessToken = res.data.access_token;
+    }).catch(console.error);
 
 const checkTwitchChannels = async () => {
     if (onlineStatus.length > 0) {
