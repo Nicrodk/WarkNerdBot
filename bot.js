@@ -3,6 +3,7 @@ const helpEmbed = require('./embeds/HelpEmbed.js');
 const MongoClient = require('mongodb').MongoClient;
 const config = require('./config.json');
 const discord = require('discord.js');
+const cron = require('node-cron');
 const logger = require('winston');
 const axios = require('axios');
 const fs = require('fs');
@@ -142,11 +143,12 @@ const checkTwitchChannels = async () => {
 const checkReminders = async () => {
     const currTime = new Date().getTime();
     const guilds = client.guilds.cache.map(guild => guild.id);
-    let remindersActive = false;
-    for (let i = 0; i < guilds.length; i++) {
-        const reminder = await reminderDb.collection(guilds[i]).find({}).toArray();
-        let length = reminder.length;
-        reminder.forEach(element => {
+    const reminderCollections = await Promise.all(guilds.map(guildId =>
+        reminderDb.collection(guildId).find({}).toArray()));
+    const notEmptyCollections = reminderCollections.filter(collection => !collection.length);
+    //Might want "await Promise.all(remimderCollection.map(async collection =>" if race conditions act up
+    notEmptyCollections.forEach(async collection => {
+        collection.forEach(element => {
             if (currTime > element.time) {
                 const channel = client.channels.cache.get(element.channelID);
                 channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
@@ -162,21 +164,24 @@ const checkReminders = async () => {
 
                     collector.stop("User send a message");
                 });
-                length--;
             }
-        });
-        if (length >= 1)
-            remindersActive = true;
-    }
-    if (!remindersActive) {
-        reminderUpdate = false;
-    }
+        });        
+    });
 }
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
-let reminderUpdate = setInterval(checkReminders, 30 * 1000);
+/*let reminderUpdate = setInterval(checkReminders, 30 * 1000);
 let twitchUpdate = setInterval(checkTwitchChannels, 15 * 1000);
-let onlineStatusUpdate = setInterval(updateOnlineStatus, 60 * 1000);
+let onlineStatusUpdate = setInterval(updateOnlineStatus, 60 * 1000);*/
+const reminderUpdate = cron.schedule('*/30 * * * * *', () => {
+    checkReminders();
+});
+const twitchUpdate = cron.schedule('*/15 * * * * *', () => {
+    checkTwitchChannels();
+});
+const onlineStatusUpdate = cron.schedule('* * * * *', () => {
+    onlineStatusUpdate();
+});
 
 const ParseCommand = (message, author) => {
 
@@ -191,9 +196,6 @@ const ParseCommand = (message, author) => {
     } else if (cmd === "helplist") {
         client.commands.get(cmd).execute(message, helpNames);
         return;
-    } else if (cmd === "reminderstatus") {
-        message.channel.send("update: " + reminderUpdate);
-        return;
     } else if (!client.commands.has(cmd))
         return;
 
@@ -206,8 +208,6 @@ const ParseCommand = (message, author) => {
         }*/
         try {
             client.commands.get(cmd).execute(message, messageText[1], reminderDb, twitchDb);
-            if (reminderUpdate === false)
-                reminderUpdate = setInterval(checkReminders, 30 * 1000);
         } catch (error) {
             console.error(error);
             if (error === "Part of given time was above limit") {

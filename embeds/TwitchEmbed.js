@@ -5,6 +5,7 @@ module.exports = {
 	description: 'embed that does the pinging of twitch notification role',
 	execute(client, userData, pingRoles, pingChannels) {
 		let imageURL = userData.thumbnail_url.replace("{width}x{height}", "1920x1080");
+		imageURL += '?' + Math.floor(Math.random() * 10000000);
 
 		const twitchEmbed = {
 			color: 0x9147FF,
