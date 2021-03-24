@@ -3,6 +3,7 @@ const helpEmbed = require('./embeds/HelpEmbed.js');
 const MongoClient = require('mongodb').MongoClient;
 const config = require('./config.json');
 const discord = require('discord.js');
+const cron = require('node-cron');
 const logger = require('winston');
 const axios = require('axios');
 const fs = require('fs');
@@ -98,85 +99,92 @@ const getTwitchAccessToken = () =>
     }).catch(console.error);
 
 const checkTwitchChannels = async () => {
-    if (onlineStatus.length > 0) {
-        const pingRoles = await twitchDb.collection('pingRoles').find({}).toArray()
-        if (pingRoles.length > 0) {
-            let twitchGetRequest = `https://api.twitch.tv/helix/streams?user_login=${onlineStatus[0].name}`;
-            for (let i = 1; i < onlineStatus.length; i++) {
-                twitchGetRequest += '&user_login=' + onlineStatus[i].name;
-            }
-            try {
-                const response = await axios.get(twitchGetRequest, {
-                    headers: { 'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken }
-                })
-                console.log(Date(), response.data.data);
-                let foundArr = [];
-                response.data.data.forEach(entry => {
-                    const foundElement = onlineStatus.find(element => element.name == entry.user_login)
-                    if (!foundElement) {
-                        console.log("Stream data received for non followed stream");
-                    } else if (foundElement.status != entry.type) {
-                        foundArr.push(entry.user_login);
-                        foundElement.status = entry.type;
-                        twitchEmbed.execute(client, entry, pingRoles, foundElement.channelIDs);
-                    } else if (foundElement.status == entry.type) {
-                        foundArr.push(entry.user_login);
-                    }
-                });
-                onlineStatus.forEach((element, index) => {
-                    if (!foundArr.includes(element.name)) {
-                        onlineStatus[index].status = "offline";
-                    }
-                });
-            } catch (err) {
-                console.log(err.response.data);
-                if (err.response.status == 401) {
-                    await getTwitchAccessToken()
-                      .then(checkTwitchChannels)
+    if (onlineStatus.length === 0) {
+        return;
+    }
+    const pingRoles = await twitchDb.collection('pingRoles').find({}).toArray()
+    if (pingRoles.length === 0) {
+        return;
+    }
+    let twitchGetRequest = `https://api.twitch.tv/helix/streams?user_login=${onlineStatus[0].name}`;
+    for (let i = 1; i < onlineStatus.length; i++) {
+        twitchGetRequest += '&user_login=' + onlineStatus[i].name;
+    }
+    try {
+        const response = await axios.get(twitchGetRequest, {
+            headers: { 'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken }
+        })
+        console.log(Date(), response.data.data);
+        let foundArr = [];
+        response.data.data.forEach(entry => {
+            const foundElement = onlineStatus.find(element => element.name == entry.user_login)
+            if (foundElement) {
+                foundArr.push(entry.user_login);
+                if (foundElement.status != entry.type) {
+                    foundElement.status = entry.type;
+                    twitchEmbed.execute(client, entry, pingRoles, foundElement.channelIDs);
                 }
+            } else {
+                console.log("Stream data received for non followed stream");
             }
+        });
+        onlineStatus.forEach((element, index) => {
+            if (!foundArr.includes(element.name)) {
+                onlineStatus[index].status = "offline";
+            }
+        });
+    } catch (err) {
+        console.log(err.response.data);
+        if (err.response.status == 401) {
+            await getTwitchAccessToken()
+              .then(checkTwitchChannels)
         }
     }
 }
 
 const checkReminders = async () => {
-    const currTime = new Date().getTime();
-    const guilds = client.guilds.cache.map(guild => guild.id);
-    let remindersActive = false;
-    for (let i = 0; i < guilds.length; i++) {
-        const reminder = await reminderDb.collection(guilds[i]).find({}).toArray();
-        let length = reminder.length;
-        reminder.forEach(element => {
-            if (currTime > element.time) {
-                const channel = client.channels.cache.get(element.channelID);
-                channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
-                reminderDb.collection(guilds[i]).deleteOne({'_id' : element._id});
+    const currTime = Date.now()
+    const guildIds = client.guilds.cache.map(guild => guild.id);
+    const reminderCollections = await Promise.all(
+      guildIds.map(
+        guildId => reminderDb.collection(guildId).find({}).toArray()
+      )
+    );
+    const remindersToSend = reminderCollections.reduce((carry, collection) => {
+        return [...carry, ...collection]
+    }, []).filter(element => element.time > currTime)
+    //Might want "await Promise.all(remimderCollection.map(async collection =>" if race conditions act up
+    remindersToSend.forEach(async element => {
+        const channel = client.channels.cache.get(element.channelID);
+        channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
+        reminderDb.collection(guildIds[i]).deleteOne({'_id' : element._id});
 
-                const filter = message => message.author.id == element.userID;
-                const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000});
-                collector.on('collect', message => {
-                    if (message.content.toLowerCase().includes('bitch'))
-                        message.reply(`<:nyaissaknife:591695615516213309>`);
-                    else if (message.content.includes('aissabap'))
-                        message.channel.send(`<:nyaissabapped:578493464627642378>`);
-
-                    collector.stop("User send a message");
-                });
-                length--;
+        const filter = message => message.author.id == element.userID;
+        const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000, max: 1});
+        collector.on('collect', message => {
+            if (message.content.toLowerCase().includes('bitch')) {
+                message.reply(`<:nyaissaknife:591695615516213309>`);
+            }
+            else if (message.content.includes('aissabap')) {
+                message.channel.send(`<:nyaissabapped:578493464627642378>`);
             }
         });
-        if (length >= 1)
-            remindersActive = true;
-    }
-    if (!remindersActive) {
-        reminderUpdate = false;
-    }
+    });
 }
 
 //In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
-let reminderUpdate = setInterval(checkReminders, 30 * 1000);
+/*let reminderUpdate = setInterval(checkReminders, 30 * 1000);
 let twitchUpdate = setInterval(checkTwitchChannels, 15 * 1000);
-let onlineStatusUpdate = setInterval(updateOnlineStatus, 60 * 1000);
+let onlineStatusUpdate = setInterval(updateOnlineStatus, 60 * 1000);*/
+cron.schedule('*/30 * * * * *', () => {
+    checkReminders();
+});
+cron.schedule('*/15 * * * * *', () => {
+    checkTwitchChannels();
+});
+cron.schedule('* * * * *', () => {
+    updateOnlineStatus();
+});
 
 const ParseCommand = (message, author) => {
 
@@ -191,13 +199,10 @@ const ParseCommand = (message, author) => {
     } else if (cmd === "helplist") {
         client.commands.get(cmd).execute(message, helpNames);
         return;
-    } else if (cmd === "reminderstatus") {
-        message.channel.send("update: " + reminderUpdate);
-        return;
     } else if (!client.commands.has(cmd))
         return;
 
-    messageText = message.content.split(config.prefix + ' ' + cmd + ' ');
+    const messageText = message.content.split(config.prefix + ' ' + cmd + ' ');
 
     if (cmd === "remindme") {
         /*if (message.content.includes("<@")) { //check for pings
@@ -206,8 +211,6 @@ const ParseCommand = (message, author) => {
         }*/
         try {
             client.commands.get(cmd).execute(message, messageText[1], reminderDb, twitchDb);
-            if (reminderUpdate === false)
-                reminderUpdate = setInterval(checkReminders, 30 * 1000);
         } catch (error) {
             console.error(error);
             if (error === "Part of given time was above limit") {

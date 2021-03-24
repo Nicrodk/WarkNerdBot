@@ -9,6 +9,7 @@
 		"discord.js": "^12.3.1",
 		"express": "^4.17.1",
 		"mongodb": "^3.6.2",
+		"node-cron": "^3.0.0",
 		"seedrandom": "^3.0.5",
 		"winston": "^3.3.3"
 	}
