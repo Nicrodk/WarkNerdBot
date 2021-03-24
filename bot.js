@@ -202,7 +202,7 @@ const ParseCommand = (message, author) => {
     } else if (!client.commands.has(cmd))
         return;
 
-    messageText = message.content.split(config.prefix + ' ' + cmd + ' ');
+    const messageText = message.content.split(config.prefix + ' ' + cmd + ' ');
 
     if (cmd === "remindme") {
         /*if (message.content.includes("<@")) { //check for pings
