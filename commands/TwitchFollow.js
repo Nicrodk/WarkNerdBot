@@ -5,7 +5,7 @@ module.exports = {
 	explanation: "Adds a channel to the list being checked",
 	execute(message, text, reminderDb, twitchDb) {
 		text = text.toLowerCase();
-		twitchDb.collection('followEntries').findOne({"name": text, "channelID": message.channel.id}).then(entry => {
+		twitchDb.collection('followEntries').findOne({"name": text, "guildID": message.guild.id}).then(entry => {
 			if (entry) {
 				message.reply("That entry is already in the database");
 			} else {

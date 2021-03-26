@@ -64,6 +64,7 @@ module.exports = {
 
 		let reminder = {
 			"channelID":message.channel.id,
+			"guildID":	message.guild.id,
 			"userID": 	message.author.id,
 			"text": 	textArr.join(' '),
 			"time": 	0

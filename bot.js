@@ -46,7 +46,7 @@ const initializeOnlineStatus = async () => {
         if (foundIndex >= 0 && !onlineStatus[foundIndex].channelIDs.includes(entry.channelID))
             onlineStatus[foundIndex].channelIDs.push(entry.channelID);
         else if (foundIndex == -1)
-            onlineStatus.push({'name': entry.name, 'status': "offline", 'channelIDs': [entry.channelID]});
+            onlineStatus.push({'name': entry.name, 'status': "offline", 'channelIDs': [entry.channelID], 'offlineCount': 0});
     });
 }
 
@@ -58,7 +58,7 @@ const updateOnlineStatus = async () => {
         if (foundIndex >= 0 && !newArr[foundIndex].channelIDs.includes(streamNames[i].channelID))
             newArr[foundIndex].channelIDs.push(streamNames[i].channelID);
         else if (foundIndex == -1)
-            newArr.push({'name': streamNames[i].name, 'status': "offline", 'channelIDs': [streamNames[i].channelID]});
+            newArr.push({'name': streamNames[i].name, 'status': "offline", 'channelIDs': [streamNames[i].channelID], 'offlineCount': 0});
     }
     for (let i = 0; i < newArr.length; i++) {
         const foundIndex = onlineStatus.findIndex(element => element.name == streamNames[i].name);
@@ -102,7 +102,7 @@ const checkTwitchChannels = async () => {
     if (onlineStatus.length === 0) {
         return;
     }
-    const pingRoles = await twitchDb.collection('pingRoles').find({}).toArray()
+    const pingRoles = await twitchDb.collection('pingRoles').find({}).toArray();
     if (pingRoles.length === 0) {
         return;
     }
@@ -113,13 +113,14 @@ const checkTwitchChannels = async () => {
     try {
         const response = await axios.get(twitchGetRequest, {
             headers: { 'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken }
-        })
+        });
         console.log(Date(), response.data.data);
         let foundArr = [];
         response.data.data.forEach(entry => {
             const foundElement = onlineStatus.find(element => element.name == entry.user_login)
             if (foundElement) {
                 foundArr.push(entry.user_login);
+                foundElement.offlineCount = 0;
                 if (foundElement.status != entry.type) {
                     foundElement.status = entry.type;
                     twitchEmbed.execute(client, entry, pingRoles, foundElement.channelIDs);
@@ -129,15 +130,18 @@ const checkTwitchChannels = async () => {
             }
         });
         onlineStatus.forEach((element, index) => {
-            if (!foundArr.includes(element.name)) {
+            if (!foundArr.includes(element.name) && onlineStatus[index].offlineCount <= 8) {
+                onlineStatus[index].offlineCount += 1;
+            } else if (!foundArr.includes(element.name)) {
                 onlineStatus[index].status = "offline";
+                onlineStatus[index].offlineCount = 0;
             }
         });
     } catch (err) {
         console.log(err.response.data);
         if (err.response.status == 401) {
             await getTwitchAccessToken()
-              .then(checkTwitchChannels)
+              .then(checkTwitchChannels);
         }
     }
 }
@@ -152,12 +156,12 @@ const checkReminders = async () => {
     );
     const remindersToSend = reminderCollections.reduce((carry, collection) => {
         return [...carry, ...collection]
-    }, []).filter(element => element.time > currTime)
+    }, []).filter(element => element.time < currTime);
     //Might want "await Promise.all(remimderCollection.map(async collection =>" if race conditions act up
     remindersToSend.forEach(async element => {
         const channel = client.channels.cache.get(element.channelID);
         channel.send(`<@${element.userID}>, You wanted to be reminded about: ${element.text}`);
-        reminderDb.collection(guildIds[i]).deleteOne({'_id' : element._id});
+        reminderDb.collection(element.guildID).deleteOne({'_id' : element._id});
 
         const filter = message => message.author.id == element.userID;
         const collector = new discord.MessageCollector(channel, filter, {time: 5*60*1000, max: 1});
