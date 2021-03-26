@@ -1,6 +1,6 @@
 const discord = require('discord.js');
 
-const DeleteMessage = async (message, text, amount, reminders, db) => {
+const DeleteMessage = async (message, text, reminders, db) => {
     const m = await message.channel.send(`${text}\nPlease respond with the number for the reminder you want deleted.`);
     const filter = mes => mes.author.id == message.author.id;
     const collectorSelection = new discord.MessageCollector(message.channel, filter, {time: 1*60*1000});
@@ -38,22 +38,16 @@ module.exports = {
     description: 'Command that will show a list of your reminders and allow you to select the one you want deleted',
     parameters: 'none',
     explanation: 'Gives the list of reminders and allows for selection of one to delete',
-    execute(message, text, db, twitchDb) {
+    async execute(message, text, db, twitchDb) {
         let replyString = "";
-        let amount = 0;
-        db.collection(message.guild.id).find({"userID" : message.author.id}).toArray((err, reminders) => {
-            const _reminders = reminders;
-            reminders.forEach((element, index) => {
-                let name = message.guild.member(element.userID).nickname;
-                if (name == null)
-                    name = message.guild.member(element.userID).user.username;
-                replyString += index+1 + ": " + name + " " + element.text + "\n";
-                amount = index+1;
-            });
-            if (replyString != "")
-                DeleteMessage(message, replyString, amount, _reminders, db);
-            else
-                message.channel.send("No reminders found");
-        });
+        const reminders = await db.collection(message.guild.id).find({"userID" : message.author.id}).toArray();
+        const member = await message.guild.members.fetch(message.author.id);
+        for (let i = 0; i < reminders.length; i++) {
+            replyString += i+1 + ": " + member.displayName + " " + reminders[i].text + "\n";
+        }
+        if (replyString != "")
+            DeleteMessage(message, replyString, reminders, db);
+        else
+            message.channel.send("No reminders found");
     },
 };
