@@ -46,7 +46,7 @@ const initializeOnlineStatus = async () => {
         if (foundIndex >= 0 && !onlineStatus[foundIndex].channelIDs.includes(entry.channelID))
             onlineStatus[foundIndex].channelIDs.push(entry.channelID);
         else if (foundIndex == -1)
-            onlineStatus.push({'name': entry.name, 'status': "offline", 'channelIDs': [entry.channelID], 'offlineCount': 0});
+            onlineStatus.push({'name': entry.name, 'status': "offline", 'channelIDs': [entry.channelID]});
     });
 }
 
@@ -58,7 +58,7 @@ const updateOnlineStatus = async () => {
         if (foundIndex >= 0 && !newArr[foundIndex].channelIDs.includes(streamNames[i].channelID))
             newArr[foundIndex].channelIDs.push(streamNames[i].channelID);
         else if (foundIndex == -1)
-            newArr.push({'name': streamNames[i].name, 'status': "offline", 'channelIDs': [streamNames[i].channelID], 'offlineCount': 0});
+            newArr.push({'name': streamNames[i].name, 'status': "offline", 'channelIDs': [streamNames[i].channelID]});
     }
     for (let i = 0; i < newArr.length; i++) {
         const foundIndex = onlineStatus.findIndex(element => element.name == streamNames[i].name);
@@ -98,6 +98,7 @@ const getTwitchAccessToken = () =>
         twitchAccessToken = res.data.access_token;
     }).catch(console.error);
 
+let logTwitch = false;
 const checkTwitchChannels = async () => {
     if (onlineStatus.length === 0) {
         return;
@@ -114,28 +115,26 @@ const checkTwitchChannels = async () => {
         const response = await axios.get(twitchGetRequest, {
             headers: { 'client-id': config.twitchClientID, Authorization: 'Bearer ' + twitchAccessToken }
         });
-        console.log(Date(), response.data.data);
+        if (logTwitch) {
+            console.log(Date(), response.data.data);
+            logTwitch = false;
+        }
         let foundArr = [];
-        response.data.data.forEach(entry => {
-            const foundElement = onlineStatus.find(element => element.name == entry.user_login)
+        for (let i = 0; i < response.data.data.length; i++) {
+            const foundElement = onlineStatus.find(element => element.name == response.data.data[i].user_login)
             if (foundElement) {
-                foundArr.push(entry.user_login);
-                foundElement.offlineCount = 0;
-                if (foundElement.status != entry.type) {
-                    foundElement.status = entry.type;
-                    twitchEmbed.execute(client, entry, pingRoles, foundElement.channelIDs);
+                foundArr.push(response.data.data[i].user_login);
+                if (foundElement.status != response.data.data[i].type) {
+                    foundElement.status = response.data.data[i].type;
+                    twitchEmbed.execute(client, response.data.data[i], pingRoles, foundElement.channelIDs);
                 }
             } else {
                 console.log("Stream data received for non followed stream");
             }
-        });
-        onlineStatus.forEach((element, index) => {
-            if (!foundArr.includes(element.name) && onlineStatus[index].offlineCount <= 8) {
-                onlineStatus[index].offlineCount += 1;
-            } else if (!foundArr.includes(element.name)) {
-                onlineStatus[index].status = "offline";
-                onlineStatus[index].offlineCount = 0;
-            }
+        }
+        onlineStatus.forEach(element => {
+            if (!foundArr.includes(element.name))
+                element.status = "offline";
         });
     } catch (err) {
         console.log(err.response.data);
@@ -176,10 +175,6 @@ const checkReminders = async () => {
     });
 }
 
-//In milis so 60 * 1000 is once a minute, clearInterval(reminderUpdate); to stop
-/*let reminderUpdate = setInterval(checkReminders, 30 * 1000);
-let twitchUpdate = setInterval(checkTwitchChannels, 15 * 1000);
-let onlineStatusUpdate = setInterval(updateOnlineStatus, 60 * 1000);*/
 cron.schedule('*/30 * * * * *', () => {
     checkReminders();
 });
@@ -196,6 +191,9 @@ const ParseCommand = (message, author) => {
 
     let args = lowerCase.substring(config.prefix.length + 1).split(' ');
     const cmd = args[0];
+
+    if (cmd == "logtwitch" && message.author.id == config.botCreatorID)
+        logTwitch = true;
 
     if (cmd === "help") {
         helpEmbed.execute(message, helpNames, helpParameters, helpDescriptions);
