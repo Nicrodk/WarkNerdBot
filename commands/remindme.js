@@ -2,7 +2,7 @@ module.exports = {
 	name: 'remindme',
 	description: 'Create a reminder',
 	parameters: 'Xidentifier Xidentifier Xidentifier text',
-	explanation: 'Creates a countdown for pinging the person with "text"\nmaximum allowed days is 60, hours is 144, minutes is 1800 and seconds is 60000 (the limits are individual so you can do 1800minutes 144hours 60days)\nThe the identifiers can be just [s|S], [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, you can do just 1 or 2 numbers+identifier if you only want to specify reminder in s/m/h/d or sm/sh/sd/mh/md/hd\nreminders are checked once every 30 seconds',
+	explanation: 'Creates a countdown for pinging the person with "text"\nmaximum allowed days is 180, hours is 144, minutes is 1800 and seconds is 60000 (the limits are individual so you can do 1800minutes 144hours 180days)\nThe the identifiers can be just [s|S], [m|M], [h|H] or [d|D] but still works with full word, default behaviour for no identifier is Xminutes Xhours Xdays, you can do just 1 or 2 numbers+identifier if you only want to specify reminder in s/m/h/d or sm/sh/sd/mh/md/hd\nreminders are checked once every 30 seconds',
 	execute(message, text, db, twitchDb) {
 		text = ' ' + text;
 		let times = text.match(/(\d+)(\w*)\s*(?:(\d+)(\w*)\s*)?(?:(\d+)(\w*))?/);
@@ -32,7 +32,7 @@ module.exports = {
 			},
 
 			AddD: (date, amount) => {
-				if (amount > 60)
+				if (amount > 180)
 					throw "Part of given time was above limit";
 				date.setTime(date.getTime() + amount * 864e5);
 				return date;

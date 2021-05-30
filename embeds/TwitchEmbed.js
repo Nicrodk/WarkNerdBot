@@ -13,7 +13,6 @@ module.exports = {
 			const messageArr = collection.array();
 			let foundMessages = [];
 			for (let j = 0; j < messageArr.length; j++) {
-				console.log(messageArr[j].createdTimestamp + 30*60*1000);
 				if (messageArr[j].createdTimestamp + 30*60*1000 > curTime
 					&& messageArr[j].content.includes(userData.user_name)) {
 					foundMessages.push(pingChannels[i]);
