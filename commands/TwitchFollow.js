@@ -10,10 +10,10 @@ module.exports = {
 				message.reply("That entry is already in the database");
 			} else {
 				const twitchEntry = {
-				"name": 	text,
-				"status": 	"offline",
-				"channelID":message.channel.id,
-				"guildID": 	message.guild.id
+					"name": 	text,
+					"status": 	"offline",
+					"channelID":message.channel.id,
+					"guildID": 	message.guild.id
 				};
 
 				twitchDb.collection('followEntries').insertOne(twitchEntry).then(() => {
