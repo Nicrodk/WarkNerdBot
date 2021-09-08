@@ -174,7 +174,7 @@ const checkReminders = async () => {
 }
 
 const cookieDaily = () => {
-	db.collection('cookies').update({}, {$set:{"dailyReady": true}}, {multi: true});
+	reminderDb.collection('cookies').updateMany({}, {$set:{"dailyReady": true}});
 }
 
 cron.schedule('*/30 * * * * *', () => {
@@ -187,7 +187,6 @@ cron.schedule('* * * * *', () => {
 	updateOnlineStatus();
 });
 cron.schedule('0 0 * * *', () => {
-	console.log("Resetting daily cookies");
 	cookieDaily();
 });
 
